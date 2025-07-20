@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Object Detection UI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>⚡ Real-Time Object Detection</h1>
+    <p id="status">Loading models...</p>
+  </header>
+
+  <main>
+    <div class="horizontal-layout">
+      <!-- Live video + detection overlay -->
+      <div class="box">
+        <h2>🎥 Live Detection</h2>
+        <div class="video-container">
+          <video id="webcam" autoplay playsinline muted></video>
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+<div class="camera-controls">
+  <button id="scan-btn">🔍 Scan Cameras</button>
+  <select id="camera-select" aria-label="Camera selection"></select>
+</div>
+
+      <!-- Snapshot detection -->
+      <div class="box">
+        <h2>🖼️ Snapshot Detection</h2>
+        <canvas id="snapshot" width="640" height="480"></canvas>
+        <button id="detect-btn">📸 Detect Objects</button>
+        <ul id="result-list"></ul>
+      </div>
+    </div>
+  </main>
+
+  <!-- TensorFlow.js + COCO-SSD -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <script src="app.js"></script>
+</body>
+</html>

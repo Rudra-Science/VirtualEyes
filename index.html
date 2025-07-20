@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Object Detection App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* Reset & base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .home-container {
+      max-width: 500px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #00e5ff;
+      margin-bottom: 20px;
+    }
+
+    .tagline {
+      font-size: 18px;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+
+    .start-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #00e5ff;
+      color: #111;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+
+    .start-btn:hover {
+      background-color: #00bcd4;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+
+      .tagline {
+        font-size: 16px;
+      }
+
+      .start-btn {
+        font-size: 15px;
+        padding: 10px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="home-container">
+    <h1>⚡ Real-Time Object Detection</h1>
+    <p class="tagline">Detect objects instantly using your webcam or device camera.</p>
+    <a href="html.html" class="start-btn">🚀 Get Started</a>
+  </div>
+</body>
+</html>
