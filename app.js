@@ -84,12 +84,60 @@ function drawBox(bbox, label, color = 'cyan') {
   ctx.fillText(label, bbox[0], bbox[1] > 10 ? bbox[1] - 5 : 10);
 }
 
-(async () => {
-  await setupCamera();
-  await loadModels();
-  detectFrame();
-})();
+// Draw Cartesian grid with 1 unit = 1 cm = 5 pixels
+function drawCartesianGrid(ctx, width, height, unitSize = 5) {
+  const midX = width / 2;
+  const midY = height / 2;
 
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 1;
+
+  // Vertical grid lines
+  for (let x = midX; x <= width; x += unitSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let x = midX - unitSize; x >= 0; x -= unitSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+
+  // Horizontal grid lines
+  for (let y = midY; y <= height; y += unitSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  for (let y = midY - unitSize; y >= 0; y -= unitSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  // X and Y axes
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1.5;
+
+  // X-axis
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  ctx.lineTo(width, midY);
+  ctx.stroke();
+
+  // Y-axis
+  ctx.beginPath();
+  ctx.moveTo(midX, 0);
+  ctx.lineTo(midX, height);
+  ctx.stroke();
+}
+
+// Detect on snapshot
 document.getElementById('detect-btn').addEventListener('click', async () => {
   const snapshotCanvas = document.getElementById('snapshot');
   const ctx = snapshotCanvas.getContext('2d');
@@ -98,63 +146,56 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
   const canvasWidth = snapshotCanvas.width;
   const canvasHeight = snapshotCanvas.height;
   const centerX = canvasWidth / 2;
-  const fov = 90; // 90° field of view (±45°)
+  const centerY = canvasHeight / 2;
 
   resultList.innerHTML = "";
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  // Draw snapshot from video
+  // Draw webcam image
   ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
 
-  // Draw crosshair
-  ctx.strokeStyle = 'red';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(centerX, 0);
-  ctx.lineTo(centerX, canvasHeight);
-  ctx.moveTo(0, canvasHeight / 2);
-  ctx.lineTo(canvasWidth, canvasHeight / 2);
-  ctx.stroke();
+  // Draw grid and axes
+  //drawCartesianGrid(ctx, canvasWidth, canvasHeight, 5);
+
 
   const linesToSpeak = [];
 
-  // Object height reference in meters
   const objectHeights = {
-    person: 1.7,
+    person: 1.5,
     bottle: 0.25,
     chair: 1.0,
     book: 0.3,
     tv: 0.6,
-    laptop: 0.4
+    laptop: 0.4,
+    cellphone: 0.15,
+    keyboard: 0.45,
+    mouse: 0.12
+    
   };
-  const FOCAL_LENGTH = 600; // Focal length in pixels (approx)
 
-  // Run COCO detection
+  const FOCAL_LENGTH_PX = 700; // Calibrated or adjusted focal length
+  const PIXELS_PER_CM = 5;
+
   const cocoPreds = await cocoModel.detect(snapshotCanvas);
   cocoPreds.forEach(pred => {
     const [x, y, width, height] = pred.bbox;
-    const objectCenterX = x + width / 2;
 
-    // Angle from center
-    const offsetRatio = (objectCenterX - centerX) / canvasWidth;
-    const clampedRatio = Math.max(Math.min(offsetRatio, 0.5), -0.5);
-    const angle = (clampedRatio * fov).toFixed(1);
-    const direction = angle > 0
-      ? `${angle} degrees to the right`
-      : angle < 0
-      ? `${Math.abs(angle)} degrees to the left`
-      : 'centered';
+    const centerXCanvas = x + width / 2;
+    const centerYCanvas = y + height / 2;
 
-    // Distance estimate
+    const coordX = Math.round((centerXCanvas - centerX) / PIXELS_PER_CM);
+    const coordY = Math.round((centerY - centerYCanvas) / PIXELS_PER_CM);
+
+    // Distance estimation
     let distance;
-    const knownHeight = objectHeights[pred.class.toLowerCase()];
-    if (knownHeight) {
-      const estimatedDistance = (knownHeight * FOCAL_LENGTH) / height;
+    const knownSize = objectHeights[pred.class.toLowerCase()];
+    if (knownSize && height >= 5) {
+      const estimatedDistance = (knownSize * FOCAL_LENGTH_PX) / height;
       const meters = Math.floor(estimatedDistance);
       const centimeters = Math.round((estimatedDistance - meters) * 100);
       distance = `${meters} meter${meters !== 1 ? 's' : ''} ${centimeters} cm`;
     } else {
-      distance = "unknown distance";
+      distance = "unknown";
     }
 
     // Draw box and label
@@ -164,79 +205,44 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
 
     ctx.fillStyle = 'cyan';
     ctx.font = '14px Arial';
-    ctx.fillText(`${pred.class} - ${direction} - ${distance}`, x, y > 10 ? y - 5 : 10);
+    ctx.fillText(`${pred.class} (${coordX}, ${coordY}) - ${distance}`, x, y > 10 ? y - 5 : 10);
 
-    // Add to result list
     const li = document.createElement('li');
-    li.textContent = `🟦 ${pred.class} - ${direction} - ${distance}`;
+    li.textContent = `🟦 ${pred.class} at (${coordX}, ${coordY}) - ${distance}`;
     resultList.appendChild(li);
 
-    // Add to speech lines
-    linesToSpeak.push(`${pred.class}, ${direction}, at ${distance}`);
+    linesToSpeak.push(`${pred.class} at X ${coordX} centimeters, Y ${coordY} centimeters, distance ${distance}`);
   });
 
-  // Optional: Custom model
-  if (customModel) {
-    tf.tidy(() => {
-      const tfImg = tf.browser.fromPixels(snapshotCanvas).toFloat();
-      const resized = tf.image.resizeBilinear(tfImg, [224, 224]);
-      const expanded = resized.expandDims(0);
-
-      customModel.predict(expanded).data().then(predictions => {
-        predictions.forEach((conf, i) => {
-          if (conf > 0.6) {
-            const label = customLabels[i];
-            const li = document.createElement('li');
-            li.textContent = `🟧 ${label} - centered - unknown distance`;
-            resultList.appendChild(li);
-            linesToSpeak.push(`${label}, centered, distance unknown`);
-          }
-        });
-
-        // Speak all
-        const speech = linesToSpeak.join('. ');
-        if (speech) {
-          const utterance = new SpeechSynthesisUtterance(speech);
-          utterance.lang = 'en-US';
-          utterance.rate = 1;
-          utterance.pitch = 1;
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utterance);
-        }
-      });
-    });
-  } else {
-    // Speak COCO only
-    const speech = linesToSpeak.join('. ');
-    if (speech) {
-      const utterance = new SpeechSynthesisUtterance(speech);
-      utterance.lang = 'en-US';
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    }
+  // Speak result
+  const speech = linesToSpeak.join('. ');
+  if (speech) {
+    const utterance = new SpeechSynthesisUtterance(speech);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   }
 });
 
+// Shortcut key
 document.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
   if (key === 'd' || key === ' ') {
-    e.preventDefault(); // Prevent default scroll from spacebar
+    e.preventDefault();
     document.getElementById('detect-btn').click();
   }
 });
 
-
+// Camera controls
 let currentStream;
 
-// Get available video input devices
 async function getCameras() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices.filter(device => device.kind === 'videoinput');
 }
 
-// Set video stream from selected camera
 async function setCamera(deviceId) {
   if (currentStream) {
     currentStream.getTracks().forEach(track => track.stop());
@@ -259,7 +265,6 @@ async function setCamera(deviceId) {
   });
 }
 
-// Scan button behavior
 document.getElementById('scan-btn').addEventListener('click', async () => {
   const select = document.getElementById('camera-select');
   select.innerHTML = '';
@@ -277,7 +282,13 @@ document.getElementById('scan-btn').addEventListener('click', async () => {
   }
 });
 
-// Camera selection behavior
 document.getElementById('camera-select').addEventListener('change', async (e) => {
   await setCamera(e.target.value);
 });
+
+// Init
+(async () => {
+  await setupCamera();
+  await loadModels();
+  detectFrame();
+})();
