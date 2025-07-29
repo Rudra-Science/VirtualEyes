@@ -4,7 +4,18 @@
   <meta charset="UTF-8">
   <title>Object Detection UI</title>
   <link rel="stylesheet" href="style.css">
+  <link id="dark-style" rel="stylesheet" href="dark.css" disabled>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('dark-style').disabled = false;
+      }
+    });
+  </script>
 </head>
+
 <body>
   <header>
     <h1>⚡ Real-Time Object Detection</h1>
@@ -21,16 +32,17 @@
           <canvas id="canvas"></canvas>
         </div>
       </div>
-<div class="camera-controls">
-  <button id="scan-btn">🔍 Scan Cameras</button>
-  <select id="camera-select" aria-label="Camera selection"></select>
-</div>
+    <div class="camera-controls">
+      <button id="scan-btn" class="btn">🔍 Scan Cameras</button>
+      <select id="camera-select" aria-label="Camera selection"></select>
+    </div>
+
 
       <!-- Snapshot detection -->
       <div class="box">
         <h2>🖼️ Snapshot Detection</h2>
         <canvas id="snapshot" width="640" height="480"></canvas>
-        <button id="detect-btn">📸 Detect Objects</button>
+        <button id="detect-btn" class="btn">📸 Detect Objects</button>
         <ul id="result-list"></ul>
       </div>
     </div>
