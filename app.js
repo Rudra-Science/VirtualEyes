@@ -3,8 +3,13 @@ let cocoModel, customModel = null;
 let ready = false;
 let frameCount = 0;
 
-const customModelURL = ''; // Optional: your custom model URL
-const customLabels = ['Class 1', 'Class 2']; // Update to match your model
+const customModelURL = '';
+const customLabels = ['Class 1', 'Class 2'];
+
+let alertActive = false;
+const beepAudio = new Audio("sound/beep.wav");
+beepAudio.loop = true;
+beepAudio.volume = 1.0; // Max volume
 
 async function setupCamera() {
   video = document.getElementById('webcam');
@@ -52,7 +57,23 @@ async function detectFrame() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const cocoPreds = await cocoModel.detect(video);
-  cocoPreds.forEach(pred => drawBox(pred.bbox, pred.class, 'cyan'));
+
+  let dangerDetected = false;
+  let detectedThreat = "";
+  const alertClasses = ['car', 'motorcycle', 'truck', 'bus'];
+
+  cocoPreds.forEach(pred => {
+    drawBox(pred.bbox, pred.class, 'cyan');
+
+    if (alertClasses.includes(pred.class.toLowerCase())) {
+      dangerDetected = true;
+      detectedThreat = pred.class;
+    }
+  });
+
+  if (dangerDetected) {
+    triggerLiveAlert(detectedThreat);
+  }
 
   if (customModel) {
     tf.tidy(() => {
@@ -84,60 +105,29 @@ function drawBox(bbox, label, color = 'cyan') {
   ctx.fillText(label, bbox[0], bbox[1] > 10 ? bbox[1] - 5 : 10);
 }
 
-// Draw Cartesian grid with 1 unit = 1 cm = 5 pixels
-function drawCartesianGrid(ctx, width, height, unitSize = 5) {
-  const midX = width / 2;
-  const midY = height / 2;
+function triggerLiveAlert(objectName = "Object") {
+  if (alertActive) return;
 
-  ctx.strokeStyle = '#444';
-  ctx.lineWidth = 1;
+  alertActive = true;
 
-  // Vertical grid lines
-  for (let x = midX; x <= width; x += unitSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let x = midX - unitSize; x >= 0; x -= unitSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
+  beepAudio.play();
 
-  // Horizontal grid lines
-  for (let y = midY; y <= height; y += unitSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-  for (let y = midY - unitSize; y >= 0; y -= unitSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
+  const utterance = new SpeechSynthesisUtterance(`⚠️ ${objectName} detected at the captured frame`);
+  utterance.lang = 'en-US';
+  utterance.rate = 1;
+  utterance.pitch = 1.1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
 
-  // X and Y axes
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 1.5;
-
-  // X-axis
-  ctx.beginPath();
-  ctx.moveTo(0, midY);
-  ctx.lineTo(width, midY);
-  ctx.stroke();
-
-  // Y-axis
-  ctx.beginPath();
-  ctx.moveTo(midX, 0);
-  ctx.lineTo(midX, height);
-  ctx.stroke();
+  setTimeout(() => {
+    beepAudio.pause();
+    beepAudio.currentTime = 0;
+    alertActive = false;
+  }, 5000);
 }
 
-// Detect on snapshot
+// ---------------- Snapshot Detection ----------------
+
 document.getElementById('detect-btn').addEventListener('click', async () => {
   const snapshotCanvas = document.getElementById('snapshot');
   const ctx = snapshotCanvas.getContext('2d');
@@ -150,13 +140,7 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
 
   resultList.innerHTML = "";
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-  // Draw webcam image
   ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
-
-  // Draw grid and axes
-  //drawCartesianGrid(ctx, canvasWidth, canvasHeight, 5);
-
 
   const linesToSpeak = [];
 
@@ -170,23 +154,19 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
     cellphone: 0.15,
     keyboard: 0.45,
     mouse: 0.12
-    
   };
 
-  const FOCAL_LENGTH_PX = 700; // Calibrated or adjusted focal length
+  const FOCAL_LENGTH_PX = 700;
   const PIXELS_PER_CM = 5;
 
   const cocoPreds = await cocoModel.detect(snapshotCanvas);
   cocoPreds.forEach(pred => {
     const [x, y, width, height] = pred.bbox;
-
     const centerXCanvas = x + width / 2;
     const centerYCanvas = y + height / 2;
-
     const coordX = Math.round((centerXCanvas - centerX) / PIXELS_PER_CM);
     const coordY = Math.round((centerY - centerYCanvas) / PIXELS_PER_CM);
 
-    // Distance estimation
     let distance;
     const knownSize = objectHeights[pred.class.toLowerCase()];
     if (knownSize && height >= 5) {
@@ -198,11 +178,9 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
       distance = "unknown";
     }
 
-    // Draw box and label
     ctx.strokeStyle = 'cyan';
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, width, height);
-
     ctx.fillStyle = 'cyan';
     ctx.font = '14px Arial';
     ctx.fillText(`${pred.class} (${coordX}, ${coordY}) - ${distance}`, x, y > 10 ? y - 5 : 10);
@@ -214,28 +192,19 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
     linesToSpeak.push(`${pred.class} at X ${coordX} centimeters, Y ${coordY} centimeters, distance ${distance}`);
   });
 
-  // Speak result
   const speech = linesToSpeak.join('. ');
   if (speech) {
     const utterance = new SpeechSynthesisUtterance(speech);
     utterance.lang = 'en-US';
     utterance.rate = 1;
     utterance.pitch = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
   }
 });
 
-// Shortcut key
-document.addEventListener('keydown', (e) => {
-  const key = e.key.toLowerCase();
-  if (key === 'd' || key === ' ') {
-    e.preventDefault();
-    document.getElementById('detect-btn').click();
-  }
-});
+// ---------------- Camera Switching ----------------
 
-// Camera controls
 let currentStream;
 
 async function getCameras() {
@@ -286,7 +255,8 @@ document.getElementById('camera-select').addEventListener('change', async (e) =>
   await setCamera(e.target.value);
 });
 
-// Init
+// ---------------- Init ----------------
+
 (async () => {
   await setupCamera();
   await loadModels();
