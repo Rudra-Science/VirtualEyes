@@ -1,0 +1,60 @@
+:root {
+  --bg-dark: linear-gradient(135deg, #001f2b, #003b36, #000000);
+  --text-dark: #e0f7fa;
+}
+
+body.dark {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+body.dark header {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+body.dark header h1,
+body.dark .box h2,
+body.dark #status {
+  color: var(--text-dark);
+}
+
+body.dark #status.ready {
+  color: #00e676;
+}
+
+body.dark #snapshot {
+  background-color: #111;
+  border-color: #444;
+}
+
+body.dark #result-list {
+  color: #d0f0f0;
+}
+
+body.dark #result-list li {
+  border-bottom: 1px solid #444;
+}
+
+body.dark .btn {
+  color: var(--text-dark);
+  background: linear-gradient(145deg, #0b2e3a, #003a2c);
+}
+
+body.dark .btn::after {
+  background: var(--bg-dark);
+}
+
+body.dark .btn:active {
+  color: #00ffe7;
+}
+
+body.dark #camera-select {
+  background-color: #002e28;
+  color: #e0f7fa;
+  border-color: #00c4cc;
+}
+
+body.dark #camera-select:focus {
+  border-color: #00ffe7;
+  box-shadow: 0 0 8px rgba(0, 255, 231, 0.6);
+}
