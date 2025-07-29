@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <title>Object Detection App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
-    /* Reset & base styles */
+    :root {
+      --bg-light: linear-gradient(135deg, #a0f0ff, #d2fff8, #e6e0ff);
+      --bg-dark: linear-gradient(135deg, #001f2b, #003b36, #000000);
+      --text-light: #111;
+      --text-dark: #e0f7fa;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -15,68 +20,196 @@
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #1e1e1e;
-      color: #f0f0f0;
+      background: var(--bg-light);
+      color: var(--text-light);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       text-align: center;
+      transition: background 0.6s ease, color 0.6s ease;
+      position: relative;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
     }
 
     .home-container {
+      background: rgba(255, 255, 255, 0.4);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       max-width: 500px;
-      padding: 20px;
+      width: 90%;
+      transition: transform 0.3s ease;
+    }
+
+    body.dark .home-container {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .home-container:hover {
+      transform: scale(1.01);
     }
 
     h1 {
-      font-size: 32px;
-      color: #00e5ff;
-      margin-bottom: 20px;
+      font-size: 36px;
+      margin-bottom: 16px;
     }
 
     .tagline {
       font-size: 18px;
-      color: #ccc;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
-    .start-btn {
-      display: inline-block;
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #00e5ff;
-      color: #111;
-      border-radius: 8px;
+    .features {
+      font-size: 15px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .btn {
+      padding: 15px 40px;
+      border: none;
+      outline: none;
+      color: var(--text-light);
+      cursor: pointer;
+      position: relative;
+      z-index: 0;
+      border-radius: 12px;
+      font-size: 17px;
+      background: linear-gradient(145deg, #d9f7ff, #e4e4ff);
       text-decoration: none;
-      transition: background-color 0.3s;
+      display: inline-block;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
-    .start-btn:hover {
-      background-color: #00bcd4;
+    body.dark .btn {
+      color: var(--text-dark);
+      background: linear-gradient(145deg, #0b2e3a, #003a2c);
     }
 
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 24px;
-      }
+    .btn::after {
+      content: "";
+      z-index: -1;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-light);
+      left: 0;
+      top: 0;
+      border-radius: 12px;
+      transition: background 0.3s ease;
+    }
 
-      .tagline {
-        font-size: 16px;
-      }
+    body.dark .btn::after {
+      background: var(--bg-dark);
+    }
 
-      .start-btn {
-        font-size: 15px;
-        padding: 10px 20px;
-      }
+    .btn::before {
+      content: "";
+      background: linear-gradient(
+        45deg,
+        #00ffe7, #b3fff7, #e0d3ff, #89faff, #d4fcf9, #c3bfff, #00ffe7
+      );
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      background-size: 600%;
+      z-index: -1;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      filter: blur(8px);
+      animation: glowing 18s linear infinite;
+      transition: opacity 0.3s ease-in-out;
+      border-radius: 12px;
+      opacity: 0;
+    }
+
+    .btn:hover::before {
+      opacity: 1;
+    }
+
+    .btn:active::after {
+      opacity: 0;
+      transition: opacity 0.1s ease;
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+      font-weight: bold;
+    }
+    
+    body.dark .btn:active {
+      color: #00ffe7;
+    }
+
+    @keyframes glowing {
+      0% { background-position: 0 0; }
+      50% { background-position: 400% 0; }
+      100% { background-position: 0 0; }
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: none;
+      border: 2px solid currentColor;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    body.dark .theme-toggle {
+      color: #e0f7fa;
+      border-color: #e0f7fa;
     }
   </style>
 </head>
 <body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+
   <div class="home-container">
     <h1>⚡ Real-Time Object Detection</h1>
-    <p class="tagline">Detect objects instantly using your webcam or device camera.</p>
-    <a href="html.html" class="start-btn">🚀 Get Started</a>
+    <p class="tagline">Instantly detect everyday objects with your webcam.</p>
+    <div class="features">
+      🧠 AI-powered detection<br>
+      📷 Live video and snapshots<br>
+      🔊 Audio feedback with coordinates
+    </div>
+    <a href="html.html" class="btn">🚀 Get Started</a>
   </div>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+  </script>
+  <script>
+  function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+
+  // On load, apply saved theme
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+    }
+  });
+</script>
+
 </body>
 </html>
