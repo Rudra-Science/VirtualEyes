@@ -1,6 +1,7 @@
 :root {
   --bg-dark: linear-gradient(135deg, #001f2b, #003b36, #000000);
   --text-dark: #e0f7fa;
+  --accent: #00c4cc;
 }
 
 body.dark {
@@ -8,33 +9,59 @@ body.dark {
   color: var(--text-dark);
 }
 
-body.dark header {
+/* Header */
+body.dark .header {
   background: rgba(0, 0, 0, 0.4);
+  color: var(--text-dark);
+  box-shadow: 0 6px 24px rgba(0, 255, 231, 0.12);
 }
 
-body.dark header h1,
-body.dark .box h2,
-body.dark #status {
+body.dark .header-sub {
+  color: #99e4e8;
+}
+
+/* Cards */
+body.dark .card,
+body.dark .card2 {
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 32px rgba(0, 255, 231, 0.08);
+}
+
+body.dark .card-title {
   color: var(--text-dark);
 }
 
-body.dark #status.ready {
-  color: #00e676;
+/* Video & Snapshot */
+body.dark .video-wrap,
+body.dark .snapshot {
+  background: #000;
+  box-shadow: inset 0 0 30px rgba(0, 255, 231, 0.2);
 }
 
-body.dark #snapshot {
-  background-color: #111;
-  border-color: #444;
+/* Footer / Detected Objects */
+body.dark .detected-row {
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -4px 40px rgba(0, 255, 231, 0.1);
+  border-top: 2px solid rgba(0, 255, 231, 0.2);
 }
 
-body.dark #result-list {
-  color: #d0f0f0;
+body.dark .obj-card {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dark);
+  border-left-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0, 255, 231, 0.08);
 }
 
-body.dark #result-list li {
-  border-bottom: 1px solid #444;
+body.dark .obj-meta {
+  color: #88d4d7;
 }
 
+body.dark .obj-thumb {
+  background: rgba(0, 255, 231, 0.1);
+  color: #00ffe7;
+}
+
+/* Buttons */
 body.dark .btn {
   color: var(--text-dark);
   background: linear-gradient(145deg, #0b2e3a, #003a2c);
@@ -44,17 +71,32 @@ body.dark .btn::after {
   background: var(--bg-dark);
 }
 
+body.dark .btn:hover::before {
+  opacity: 1;
+}
+
 body.dark .btn:active {
+  background: transparent;
   color: #00ffe7;
 }
 
-body.dark #camera-select {
+/* Dropdown */
+body.dark .select-cam {
   background-color: #002e28;
-  color: #e0f7fa;
-  border-color: #00c4cc;
+  color: var(--text-dark);
+  border-color: var(--accent);
 }
 
-body.dark #camera-select:focus {
+body.dark .select-cam:focus {
   border-color: #00ffe7;
   box-shadow: 0 0 8px rgba(0, 255, 231, 0.6);
+}
+
+/* Status */
+body.dark #statusLine {
+  color: var(--text-dark);
+}
+
+body.dark #statusLine.ready {
+  color: #00e676;
 }
