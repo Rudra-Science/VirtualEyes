@@ -2,55 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Object Detection UI</title>
+  <title>Virtual Eyes AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
-  <link id="dark-style" rel="stylesheet" href="dark.css" disabled>
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'dark') {
-        document.body.classList.add('dark');
-        document.getElementById('dark-style').disabled = false;
-      }
-    });
-  </script>
+  <link rel="stylesheet" href="dark.css">
 </head>
-
 <body>
-  <header>
-    <h1>⚡ Real-Time Object Detection</h1>
-    <p id="status">Loading models...</p>
-  </header>
-
-  <main>
-    <div class="horizontal-layout">
-      <!-- Live video + detection overlay -->
-      <div class="box">
-        <h2>🎥 Live Detection</h2>
-        <div class="video-container">
-          <video id="webcam" autoplay playsinline muted></video>
-          <canvas id="canvas"></canvas>
-        </div>
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">👁️</div>
+      <div>
+        <div class="header-title">Virtual Eyes AI</div>
+        <div class="header-sub">Real-Time Object Detection & Analysis</div>
       </div>
-    <div class="camera-controls">
-      <button id="scan-btn" class="btn">🔍 Scan Cameras</button>
-      <select id="camera-select" aria-label="Camera selection"></select>
     </div>
 
+    <div class="header-right">
+      <div id="statusLine" class="status loading">Loading model...</div>
+      <button id="scanBtn" class="btn">🔍 Scan Cameras</button>
+      <button class="btn" id="themeToggle">🌓 Toggle Theme</button>
+    </div>
+  </header>
 
-      <!-- Snapshot detection -->
-      <div class="box">
-        <h2>🖼️ Snapshot Detection</h2>
-        <canvas id="snapshot" width="640" height="480"></canvas>
-        <button id="detect-btn" class="btn">📸 Detect Objects</button>
-        <ul id="result-list"></ul>
+  <main class="container">
+    <!-- Left: Live feed -->
+    <div class="card">
+      <h2 class="card-title">🎥 Live Camera Feed</h2>
+      <div class="video-wrap">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
       </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn">⏸ Pause</button>
+        <button id="scanBtn2" class="btn">📷 Refresh Camera List</button>
+        <select id="cameraSelect" class="select-cam"></select>
+      </div>
+    </div>
+
+    <!-- Right: Snapshot analysis -->
+    <div class="card2">
+      <h2 class="card-title">🖼️ Snapshot Analysis & History</h2>
+      <canvas id="snapshot" class="snapshot"></canvas>
+
+      <div class="controls">
+        <button id="takeSnapshot" class="btn">📸 Take Snapshot</button>
+        <button id="saveData" class="btn">💾 Save Data</button>
+      </div>
+
+      <p id="resultsList">Take a snapshot to see the detected objects displayed below.</p>
     </div>
   </main>
 
-  <!-- TensorFlow.js + COCO-SSD -->
+  <!-- Footer -->
+  <footer class="detected-row">
+    <div id="detectedStrip" class="detected-strip">
+      <div style="color:var(--muted);padding:6px 10px;border-radius:8px">
+        No snapshot yet
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
   <script src="app.js"></script>
+
+  <!-- Theme Memory -->
+  <script>
+    // Apply saved theme on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') document.body.classList.add('dark');
+    });
+
+    // Theme toggle button
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  </script>
 </body>
 </html>
