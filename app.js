@@ -587,7 +587,7 @@
 
         // Play local beep.mp3
         const beepAudio = new Audio('beep.wav');
-        beepAudio.volume = 1.5;
+        beepAudio.volume = 1;
         beepAudio.play().catch(e => console.warn('Beep audio play failed:', e));
 
         // Speak the alert at the same time
@@ -641,3 +641,4 @@
 
 
  
+
